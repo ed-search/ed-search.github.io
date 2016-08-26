@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <title>Editions Diamond - Search Engine</title>
+    <meta name="description" content="Retrouvez facilement un article dans votre collection.">
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/img/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body id="app" v-cloak>
+
+    <header>
+      <nav v-bind:class="{ 'navbar navbar-default': atLeastOneSearch, 'jumbotron': !atLeastOneSearch }">
+        <a href="/">
+          <img src="img/logo.jpg" />
+        </a>
+
+        <h1>Search Engine</h1>
+        <p>Retrouvez facilement un article dans votre collection</p>
+
+        <section id="loading" v-if="loading">
+          <div class="">
+            <p v-if="loadingStep == 'download'"><em>1/2 Téléchargement de la base de données</em></p>
+            <p v-if="loadingStep == 'indexing'"><em>2/2 Construction de l'index</em></p>
+
+            <!-- Current loading step supports progressbar -->
+            <div class="progress" v-if="loadingProgress !== null && loadingProgress !== undefined">
+              <div class="progress-bar" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: {{ loadingProgress }}%;">
+                {{ loadingProgress }}%
+              </div>
+            </div>
+            <!-- Current loading step does not support progressbar - display spinner -->
+            <div class="spinner" v-if="loadingProgress === null">
+              <div class="bounce1"></div>
+              <div class="bounce2"></div>
+              <div class="bounce3"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="search" v-show="!loading && !displayError">
+          <form method="get" onsubmit="return false;">
+            <div class="input-group input-group-lg">
+              <input id="search-input" type="text" name="search" class="form-control" aria-describedby="sizing-addon1"  tabindex="1" autocomplete="off" autofocus :disabled="displayError"/>
+              <span class="input-group-btn">
+                <button id="search-submit" class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+              </span>
+            </div>
+          </form>
+        </section>
+      </nav>
+    </header>
+
+    <main>
+      <!-- spinner displayed when search in progress -->
+      <div class="results-loading" v-if="searchInProgress">
+        <div class="spinner">
+          <div class="bounce1"></div>
+          <div class="bounce2"></div>
+          <div class="bounce3"></div>
+        </div>
+      </div>
+
+      <!-- Alert displayed in case of an error in the webworker -->
+      <div class="alert alert-danger" v-if="displayError">
+        Une erreur est survenue. Pour nous aider à la résoudre, merci de saisir un rapport d'erreur à <a href="https://github.com/ed-search/web/issues/new">cette adresse</a>.
+      </div>
+
+      <!-- Search results section -->
+      <section id="results">
+        <div id="results-empty" v-if="latestSearchTerms && searchResult.length === 0 && !searchInProgress">
+          <p>Aucun résultat trouvé pour "<em>{{ latestSearchTerms }}</em>"</p>
+        </div>
+
+        <article class="results-item clearfix" v-for="article in searchResult">
+            <div class="results-item-cover">
+              <img :src="article|articleToCover" />
+            </div>
+            <div class="results-item-detail">
+              <h2><a :href="article.url" target="_blank">{{ article.title }}</a></h2>
+              <h3>{{ article.type | typeToMagName }} - {{ article.displayed_date }} - p{{ article.page }}</h3>
+              <p>{{ article.description }}</p>
+              <ul v-if="article.author || (article.keywords && article.keywords.length)" class="list-inline">
+                <li v-if="article.author"><span class="glyphicon glyphicon-user"></span> {{ article.author }}</span></li>
+                <li v-if="article.author && article.keywords && article.keywords.length"> - </li>
+                <li v-if="article.keywords && article.keywords.length">
+                  <template v-for="(index, word) in article.keywords">
+                    {{ word }}<span v-if="index != (article.keywords.length - 1)">, </span>
+                  </template>
+                </li>
+              </ul>
+            </div>
+        </article>
+      </section>
+    </main>
+
+    <footer v-show="!atLeastOneSearch">
+      <nav class="navbar navbar-default navbar-fixed-bottom">
+        <div class="container-fluid">
+          <ul class="nav navbar-nav">
+            <li><a href="https://github.com/ed-search/database">Contribuer</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="http://www.editions-diamond.fr/">Le blog</a></li>
+            <li><a href="https://boutique.ed-diamond.com/">La boutique</a></li>
+          </ul>
+        </div>
+      </nav>
+    </footer>
+
+    <script type="text/javascript">var edConfig = {"database":"https://raw.githubusercontent.com/ed-search/database/data/"};</script>
+    <script type="text/javascript" src="vue.min.js"></script>
+    <script type="text/javascript" src="rx.lite.min.js"></script>
+    <script type="text/javascript" src="rx.dom.min.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+  </body>
+</html>
